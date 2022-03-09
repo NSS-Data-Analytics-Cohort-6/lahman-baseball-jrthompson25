@@ -41,30 +41,26 @@ WHERE yearid = 2016
 GROUP BY position;
 --Answer: Battery: 41,424 | Infield: 58,934 | Outfield: 29,560
 
---Number 5 -- Use teams table
-SELECT DISTINCT g, CASE WHEN yearid BETWEEN 1920 AND 1929 THEN 'From 1920 to 1929'
-		    WHEN yearid BETWEEN 1930 AND 1939 THEN 'From 1930 to 1939'
-		    WHEN yearid BETWEEN 1940 AND 1949 THEN 'From 1940 to 1949'
-		    WHEN yearid BETWEEN 1950 AND 1959 THEN 'From 1950 to 1959'
-		    WHEN yearid BETWEEN 1960 AND 1969 THEN 'From 1960 to 1969'
-		    WHEN yearid BETWEEN 1970 AND 1979 THEN 'From 1970 to 1979'
-		    WHEN yearid BETWEEN 1980 AND 1989 THEN 'From 1980 to 1989'
-		    WHEN yearid BETWEEN 1990 AND 1999 THEN 'From 1990 to 1999'
-		    WHEN yearid BETWEEN 2000 AND 2009 THEN 'From 2000 to 2009'
-		    WHEN yearid BETWEEN 2010 AND 2016 THEN 'From 1920 to 1929'
-		    END AS decade,
-	        ROUND(AVG(so + soa), 2)  AS avg_strikeout, ROUND(AVG(hr + hra), 2) AS avg_homeruns
-  FROM teams
-  GROUP BY g, decade
-  ORDER BY decade;
-  
-  SELECT  *
-  FROM teams;
-  
-
---Number 6
+--Number 5 -- Use teams table*************Still working on it
+SELECT g, ROUND(AVG(soa), 2) AS avg_strikeout, ROUND(AVG(hra), 2) AS avg_homeruns,
+		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
+		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
+		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
+		       WHEN yearid BETWEEN 1950 AND 1959 THEN '1950s'
+		       WHEN yearid BETWEEN 1960 AND 1969 THEN '1960s'
+		       WHEN yearid BETWEEN 1970 AND 1979 THEN '1970s'
+		       WHEN yearid BETWEEN 1980 AND 1989 THEN '1980s'
+		       WHEN yearid BETWEEN 1990 AND 1999 THEN '1990s'
+		       WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
+		       WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
+		       END AS decade
+    FROM teams
+	GROUP BY g, yearid;
+	--Answer:
+ 
+--Number 6**************Need to work the bugs out
 SELECT p.namefirst, p.namelast, b.sb AS bases_stolen, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
-b.sb/b.s + b.cs AS success_stealing_perc
+(b.sb/b.sb + b.cs) AS success_stealing_perc
 FROM people AS p
 LEFT JOIN batting AS b
 ON p.playerid = b.playerid
@@ -72,33 +68,35 @@ WHERE b.yearid = 2016 AND b.sb + b.cs > 20
 ORDER by stealing_attempts DESC;
 --Answer: 
 
-
-/*SELECT namefirst, namelast, subquery.sb/subquery.stealing_attempts AS successful_stealing_perc
-FROM people, 
-  (SELECT sb, sb + cs AS stealing_attempts
-   FROM batting
-   WHERE yearid = 2016 AND sb + cs >= 20
-   ORDER BY stealing_attempts DESC) AS subquery;*/
    
 --Number 7
 
+
+
 --Number 8
-SELECT p.park_name, h.team, AVG(attendance)
-FROM homegames AS h
-LEFT JOIN parks AS p
-ON h.park = p.park
-ORDER BY p.park_name, t.name DESC
+SELECT team, park, (attendance/games) AS avg_attendance
+FROM homegames
+WHERE year = 2016 AND games >=10
+GROUP BY team, park, games, attendance
+ORDER BY avg_attendance DESC
 LIMIT 5;
+--Answer: LAN	LOS03	45719
+----------SLN	STL10	42524
+----------TOR	TOR02	41877
+----------SFN	SFO03	41546
+----------CHN	CHI11	39906
 
-SELECT *
-FROM homegames;
 
---Number 9
+--Number 9**************Still working on it
 SELECT p.namefirst, p.namelast, am.awardid, am.lgid
 FROM awardsmanagers AS am
 LEFT JOIN people AS p
 ON am.playerid = p.playerid
-WHERE awardid LIKE 'TSN%' AND lgid = 'AL';
+WHERE awardid LIKE 'TSN%' AND lgid = 'NL';
+--Answer:
+
+--Number 10
+
 
 
 
