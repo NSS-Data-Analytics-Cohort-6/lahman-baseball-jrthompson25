@@ -58,19 +58,21 @@ SELECT g, ROUND(AVG(soa), 2) AS avg_strikeout, ROUND(AVG(hra), 2) AS avg_homerun
 	GROUP BY g, yearid;
 	--Answer:
  
---Number 6**************Need to work the bugs out
-SELECT p.namefirst, p.namelast, b.sb AS bases_stolen, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
-(b.sb/b.sb + b.cs) AS success_stealing_perc
+--Number 6
+SELECT p.namefirst, p.namelast, b.sb AS stolen_bases, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
+CONCAT(ROUND(100.0 * b.sb/(b.sb+b.cs), 0), '%') AS success_stealing_perc
 FROM people AS p
 LEFT JOIN batting AS b
 ON p.playerid = b.playerid
 WHERE b.yearid = 2016 AND b.sb + b.cs > 20
-ORDER by stealing_attempts DESC;
---Answer: 
+ORDER by success_stealing_perc DESC;
+--Answer: Chris Owings at 91%
 
    
---Number 7
-
+--Number 7**************Working on it
+SELECT
+FROM
+WHERE year BETWEEN 1970 AND 2016
 
 
 --Number 8
@@ -92,10 +94,23 @@ SELECT p.namefirst, p.namelast, am.awardid, am.lgid
 FROM awardsmanagers AS am
 LEFT JOIN people AS p
 ON am.playerid = p.playerid
-WHERE awardid LIKE 'TSN%' AND lgid = 'NL';
+WHERE awardid LIKE 'TSN%' ;
 --Answer:
 
---Number 10
+--Number 10 *******************In where, current date - debut date must be >= 10
+SELECT p.namefirst, p.namelast, MAX(b.hr)
+FROM people AS p
+LEFT JOIN batting AS b
+ON p.playerid = b.playerid
+WHERE b.yearid = 2016 AND GETDATE()- p.debut >= 10 AND b.hr >= 1
+GROUP BY p.namefirst, p.namelast;
+
+
+
+SELECT * FROM batting;
+SELECT * FROM appearances;
+SELECT * FROM people;
+
 
 
 
