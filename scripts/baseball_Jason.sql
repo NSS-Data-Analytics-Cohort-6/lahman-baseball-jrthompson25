@@ -78,7 +78,7 @@ WHERE year BETWEEN 1970 AND 2016
 --Number 8
 SELECT team, park, (attendance/games) AS avg_attendance
 FROM homegames
-WHERE year = 2016 AND games >=10
+WHERE year = 2016 AND games >= 10
 GROUP BY team, park, games, attendance
 ORDER BY avg_attendance DESC
 LIMIT 5;
@@ -89,13 +89,32 @@ LIMIT 5;
 ----------CHN	CHI11	39906
 
 
---Number 9**************Still working on it
-SELECT p.namefirst, p.namelast, am.awardid, am.lgid
-FROM awardsmanagers AS am
-LEFT JOIN people AS p
-ON am.playerid = p.playerid
-WHERE awardid LIKE 'TSN%' ;
---Answer:
+--Number 9
+SELECT winners.manager_name, winners.team_name
+FROM 
+	(SELECT CONCAT(p.namefirst, ' ', p.namelast) as manager_name, am.awardid, am.lgid, t.name AS team_name
+	FROM awardsmanagers AS am
+	INNER JOIN people AS p
+	ON am.playerid = p.playerid
+	INNER JOIN teams as t
+	ON am.yearid = t.yearid
+	WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
+	GROUP BY manager_name, am.awardid, am.lgid, team_name) AS winners
+GROUP BY winners.manager_name, winners.team_name
+HAVING COUNT(winners.manager_name) > 1;
+--Answer: Jim Leyland and Davey Johnson
+
+SELECT name
+FROM 
+	(SELECT CONCAT(p.namefirst, ' ', p.namelast) AS name, am.awardid, am.lgid
+	FROM awardsmanagers AS am
+	INNER JOIN people AS p
+	ON am.playerid = p.playerid
+	WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
+	GROUP BY name, am.awardid, am.lgid) AS winners
+GROUP BY name
+HAVING COUNT(name) > 1;
+
 
 --Number 10 *******************In where, current date - debut date must be >= 10
 SELECT p.namefirst, p.namelast, MAX(b.hr)
