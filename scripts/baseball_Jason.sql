@@ -41,8 +41,8 @@ WHERE yearid = 2016
 GROUP BY position;
 --Answer: Battery: 41,424 | Infield: 58,934 | Outfield: 29,560
 
---Number 5 -- Use teams table*************Still working on it
-SELECT g, ROUND(AVG(soa), 2) AS avg_strikeout, ROUND(AVG(hra), 2) AS avg_homeruns,
+--Number 5 
+SELECT ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
 		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
 		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
 		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
@@ -55,7 +55,8 @@ SELECT g, ROUND(AVG(soa), 2) AS avg_strikeout, ROUND(AVG(hra), 2) AS avg_homerun
 		       WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
 		       END AS decade
     FROM teams
-	GROUP BY g, yearid;
+	GROUP BY soa, hr, yearid
+	ORDER BY decade;
 	--Answer:
  
 --Number 6
@@ -116,12 +117,12 @@ GROUP BY name
 HAVING COUNT(name) > 1;
 
 
---Number 10 *******************In where, current date - debut date must be >= 10
+--Number 10 *******************
 SELECT p.namefirst, p.namelast, MAX(b.hr)
 FROM people AS p
 LEFT JOIN batting AS b
 ON p.playerid = b.playerid
-WHERE b.yearid = 2016 AND GETDATE()- p.debut >= 10 AND b.hr >= 1
+WHERE b.yearid = 2016 AND p.finalgame - p.debut >= 3650 AND b.hr >= 1
 GROUP BY p.namefirst, p.namelast;
 
 
