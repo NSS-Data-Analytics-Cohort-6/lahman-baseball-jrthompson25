@@ -1,48 +1,48 @@
 --Number 1
-SELECT MIN(yearid)
-FROM appearances;
+	SELECT MIN(yearid)
+	FROM appearances;
 
-SELECT MAX(yearid)
-FROM appearances;
+	SELECT MAX(yearid)
+	FROM appearances;
 --Answer: 1871 to 2016
 
 
 --Number 2 
-SELECT p.namelast, p.namefirst, p.height, a.G_all, a.teamid
-FROM  people AS p
-LEFT JOIN appearances AS a
-ON p.playerid = a.playerid
-GROUP BY p.namelast, p.namefirst, p.height, a.G_all, a.teamid
-ORDER BY height;
+	SELECT p.namelast, p.namefirst, p.height, a.G_all, a.teamid
+	FROM  people AS p
+	LEFT JOIN appearances AS a
+	ON p.playerid = a.playerid
+	GROUP BY p.namelast, p.namefirst, p.height, a.G_all, a.teamid
+	ORDER BY height;
 --Answer: Eddie Gaedel at 43 inches. He played in 1 game and his team is SLA.
 
 --Number 3 
-SELECT p.namefirst, p.namelast, sc.schoolname, SUM(s.salary) AS total_salary
-FROM people AS p
-LEFT JOIN salaries AS s
-ON p.playerid = s.playerid
-LEFT JOIN collegeplaying AS c
-ON p.playerid = c.playerid
-LEFT JOIN schools AS sc
-ON c.schoolid = sc.schoolid
-WHERE sc.schoolname = 'Vanderbilt University' AND salary IS NOT NULL
-GROUP BY p.namefirst, p.namelast, sc.schoolname
-ORDER BY SUM(s.salary) DESC;
+	SELECT p.namefirst, p.namelast, sc.schoolname, SUM(s.salary) AS total_salary
+	FROM people AS p
+	LEFT JOIN salaries AS s
+	ON p.playerid = s.playerid
+	LEFT JOIN collegeplaying AS c
+	ON p.playerid = c.playerid
+	LEFT JOIN schools AS sc
+	ON c.schoolid = sc.schoolid
+	WHERE sc.schoolname = 'Vanderbilt University' AND salary IS NOT NULL
+	GROUP BY p.namefirst, p.namelast, sc.schoolname
+	ORDER BY SUM(s.salary) DESC;
 --Answer: David Price came in first at $245,553,888
 
 --Number 4
-SELECT SUM(po),
-	CASE WHEN pos = 'OF' THEN 'Outfield'
-		 WHEN pos IN ('SS', '1B', '2B', '3B') THEN 'Infield'
-		 WHEN pos IN ('P', 'C') THEN 'Battery'
-		 END AS position 
-FROM fielding
-WHERE yearid = 2016
-GROUP BY position;
+	SELECT SUM(po),
+		CASE WHEN pos = 'OF' THEN 'Outfield'
+			 WHEN pos IN ('SS', '1B', '2B', '3B') THEN 'Infield'
+			 WHEN pos IN ('P', 'C') THEN 'Battery'
+			 END AS position 
+	FROM fielding
+	WHERE yearid = 2016
+	GROUP BY position;
 --Answer: Battery: 41,424 | Infield: 58,934 | Outfield: 29,560
 
 --Number 5 
-SELECT ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
+	SELECT ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
 		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
 		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
 		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
@@ -60,29 +60,89 @@ SELECT ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, ROUND(AVG(hr)/SUM(g), 2) AS av
 	--Answer:
  
 --Number 6
-SELECT p.namefirst, p.namelast, b.sb AS stolen_bases, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
-CONCAT(ROUND(100.0 * b.sb/(b.sb+b.cs), 0), '%') AS success_stealing_perc
-FROM people AS p
-LEFT JOIN batting AS b
-ON p.playerid = b.playerid
-WHERE b.yearid = 2016 AND b.sb + b.cs > 20
-ORDER by success_stealing_perc DESC;
+	SELECT p.namefirst, p.namelast, b.sb AS stolen_bases, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
+	CONCAT(ROUND(100.0 * b.sb/(b.sb+b.cs), 0), '%') AS success_stealing_perc
+	FROM people AS p
+	LEFT JOIN batting AS b
+	ON p.playerid = b.playerid
+	WHERE b.yearid = 2016 AND b.sb + b.cs > 20
+	ORDER by success_stealing_perc DESC;
 --Answer: Chris Owings at 91%
 
    
---Number 7**************Working on it
-SELECT
-FROM
-WHERE year BETWEEN 1970 AND 2016
+--Number 7
+--Largest number of wins for a team that did not win the world series
+	SELECT MAX(w) AS max_wins_by_series_loser
+	FROM teams 
+	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'N';
 
+--Smallest number of wins for a team that did win the world series (Query 1)
+	SELECT MIN(w) AS min_wins_by_series_winner
+	FROM teams 
+	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'Y';
 
+--(Query 2)
+	SELECT MIN(w) AS min_wins_by_series_winner
+	FROM teams 
+	WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL AND wswin = 'Y';
+
+--(Query 3)
+	SELECT yearid, w, wswin
+	FROM teams 
+	WHERE yearid BETWEEN 1970 AND 2016  AND wswin IS NULL;
+
+--(Query 4)
+	SELECT MIN(subquery.w)
+	FROM 
+		(SELECT yearid, w, wswin
+		FROM teams 
+		WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL AND wswin = 'Y'
+		ORDER BY w) AS subquery;
+
+--(Query 5)
+	SELECT yearid, w, wswin
+	FROM teams
+	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'Y'
+	ORDER BY w;
+
+--Percentage of time a team with the most season wins also won the world series 
+	--Single Perecentage
+	SELECT 
+		CONCAT(ROUND(100.0 * AVG(CASE WHEN wswin = 'Y' AND w = subquery.most_wins THEN 1
+					   				  WHEN wswin = 'N' AND w = subquery.most_wins THEN 0
+					   				  END), 2), '%') AS max_and_ws_win_perc
+	FROM 
+		(SELECT yearid, w, MAX(w) AS most_wins, wswin
+			FROM teams 
+			WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL 
+			GROUP BY yearid, w, wswin
+			ORDER BY yearid) AS subquery;
+
+	--Percentage by year
+	SELECT subquery.yearid, 
+		CONCAT(ROUND(100.0 * AVG(CASE WHEN wswin = 'Y' AND w = subquery.most_wins THEN 1
+					   WHEN wswin = 'N' AND w = subquery.most_wins THEN 0
+					   END), 2), '%') AS max_and_ws_win_perc
+	FROM 
+		(SELECT yearid, w, MAX(w) AS most_wins, wswin
+		 FROM teams 
+		 WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL 
+		 GROUP BY yearid, w, wswin
+		 ORDER BY yearid) AS subquery
+	GROUP BY subquery.yearid
+	ORDER BY subquery.yearid;	   
+	/*Answer: Largest number of wins for a team that did not win the world series - 116 
+	          Smallest number of wins for a team that did win the world series - 63
+			  Percentage of time a team had the most season wins also won the world series (overall) - 4.83%
+			  Percentage of time a team had the most season wins also won the world series (By year) - Refer to query above*/
+			  
 --Number 8
-SELECT team, park, (attendance/games) AS avg_attendance
-FROM homegames
-WHERE year = 2016 AND games >= 10
-GROUP BY team, park, games, attendance
-ORDER BY avg_attendance DESC
-LIMIT 5;
+	SELECT team, park, (attendance/games) AS avg_attendance
+	FROM homegames
+	WHERE year = 2016 AND games >= 10
+	GROUP BY team, park, games, attendance
+	ORDER BY avg_attendance DESC
+	LIMIT 5;
 --Answer: LAN	LOS03	45719
 ----------SLN	STL10	42524
 ----------TOR	TOR02	41877
@@ -91,40 +151,46 @@ LIMIT 5;
 
 
 --Number 9
-SELECT winners.manager_name, winners.team_name
-FROM 
-	(SELECT CONCAT(p.namefirst, ' ', p.namelast) as manager_name, am.awardid, am.lgid, t.name AS team_name
-	FROM awardsmanagers AS am
-	INNER JOIN people AS p
-	ON am.playerid = p.playerid
-	INNER JOIN teams as t
-	ON am.yearid = t.yearid
-	WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
-	GROUP BY manager_name, am.awardid, am.lgid, team_name) AS winners
-GROUP BY winners.manager_name, winners.team_name
-HAVING COUNT(winners.manager_name) > 1;
+	SELECT winners.manager_name, winners.team_name
+	FROM 
+		(SELECT CONCAT(p.namefirst, ' ', p.namelast) as manager_name, am.awardid, am.lgid, t.name AS team_name
+		 FROM awardsmanagers AS am
+		 INNER JOIN people AS p
+		 ON am.playerid = p.playerid
+		 INNER JOIN teams as t
+		 ON am.yearid = t.yearid
+		 WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
+		 GROUP BY manager_name, am.awardid, am.lgid, team_name) AS winners
+	GROUP BY winners.manager_name, winners.team_name
+	HAVING COUNT(winners.manager_name) > 1;
 --Answer: Jim Leyland and Davey Johnson
 
-SELECT name
-FROM 
-	(SELECT CONCAT(p.namefirst, ' ', p.namelast) AS name, am.awardid, am.lgid
-	FROM awardsmanagers AS am
-	INNER JOIN people AS p
-	ON am.playerid = p.playerid
-	WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
-	GROUP BY name, am.awardid, am.lgid) AS winners
-GROUP BY name
-HAVING COUNT(name) > 1;
+	SELECT name
+	FROM 
+		(SELECT CONCAT(p.namefirst, ' ', p.namelast) AS name, am.awardid, am.lgid
+		 FROM awardsmanagers AS am
+		 INNER JOIN people AS p
+		 ON am.playerid = p.playerid
+		 WHERE am.awardid LIKE 'TSN%' AND am.lgid IN ('NL','AL')
+		 GROUP BY name, am.awardid, am.lgid) AS winners
+	GROUP BY name
+	HAVING COUNT(name) > 1;
 
 
 --Number 10 *******************
-SELECT p.namefirst, p.namelast, MAX(b.hr)
-FROM people AS p
-LEFT JOIN batting AS b
-ON p.playerid = b.playerid
-WHERE b.yearid = 2016 AND p.finalgame - p.debut >= 3650 AND b.hr >= 1
-GROUP BY p.namefirst, p.namelast;
+	SELECT p.namefirst, p.namelast, b.yearid, b.hr, CAST(p.finalgame AS date) - CAST(p.debut AS date) AS league_days
+	FROM batting AS b
+	LEFT JOIN people AS p
+	ON b.playerid = p.playerid
+	WHERE yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
+	ORDER BY hr DESC;
 
+	SELECT p.namefirst, p.namelast, b.yearid, b.hr, CAST(p.finalgame AS date) - CAST(p.debut AS date) AS league_days
+	FROM batting AS b
+	LEFT JOIN people AS p
+	ON b.playerid = p.playerid
+	WHERE yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
+	ORDER BY hr DESC;
 
 
 SELECT * FROM batting;
