@@ -120,25 +120,25 @@
 	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'N'
 	ORDER BY w DESC;
 
---Smallest number of wins for a team that did win the world series (Query 1)
+--Smallest number of wins for a team that did win the world series
 	SELECT DISTINCT name, yearid, w, wswin
 	FROM teams 
 	WHERE yearid BETWEEN 1970 AND 2016 AND yearid <> 1981 AND wswin = 'Y'
 	GROUP BY name, yearid, w, wswin
 	ORDER BY w;
 
---Percentage of time a team with the most season wins also won the world series 
-	--Single Perecentage
-	SELECT 
-		CONCAT(ROUND(100.0 * AVG(CASE WHEN wswin = 'Y' AND w = subquery.most_wins THEN 1
-					   				  WHEN wswin = 'N' AND w = subquery.most_wins THEN 0
-					   				  END), 2), '%') AS max_and_ws_win_perc
+--Frequency of team with most season wins also winning the world series
+	SELECT subquery.name, subquery.yearid, subquery.w, subquery.wswin
 	FROM 
-		(SELECT yearid, w, MAX(w) AS most_wins, wswin
+		(SELECT name, yearid, w, MAX(w) AS most_wins, wswin
 			FROM teams 
 			WHERE yearid BETWEEN 1970 AND 2016 AND yearid <> 1981 AND wswin IS NOT NULL 
-			GROUP BY yearid, w, wswin
-			ORDER BY yearid) AS subquery;
+			GROUP BY name, yearid, w, wswin
+			ORDER BY yearid) AS subquery
+	WHERE wswin = 'Y' AND w = subquery.most_wins
+	GROUP BY subquery.name, subquery.yearid, subquery.w, subquery.most_wins, subquery.wswin
+	ORDER BY subquery.yearid;
+
 
 	--Percentage by year
 	SELECT subquery.yearid, 
@@ -148,14 +148,13 @@
 	FROM 
 		(SELECT yearid, w, MAX(w) AS most_wins, wswin
 		 FROM teams 
-		 WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL 
+		 WHERE yearid BETWEEN 1970 AND 2016 AND yearid <> 1981 AND wswin IS NOT NULL 
 		 GROUP BY yearid, w, wswin
 		 ORDER BY yearid) AS subquery
 	GROUP BY subquery.yearid
 	ORDER BY subquery.yearid;	   
 	/*Answer: Largest number of wins for a team that did not win the world series - Seatle Mariners with 116   
 	          Smallest number of wins for a team that did win the world series - St. Louis Cardinals with 83
-			  Percentage of time a team had the most season wins also won the world series (overall) - 4.83%
 			  Percentage of time a team had the most season wins also won the world series (By year) - Refer to query above*/
 			  
 --Number 8
