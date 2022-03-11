@@ -41,10 +41,9 @@
 	GROUP BY position;
 --Answer: Battery: 41,424 | Infield: 58,934 | Outfield: 29,560
 
---Number 5-----REVISIT 
-	SELECT 
-		   ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, 
-		   ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
+--Number 5
+--Average strikeouts by batters (so) and homeruns by batters (hr) per game for each decade
+		SELECT 
 		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
 		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
 		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
@@ -55,11 +54,54 @@
 		       WHEN yearid BETWEEN 1990 AND 1999 THEN '1990s'
 		       WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
 		       WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
-		       END AS decade
+		       END AS decade,
+			   ROUND(1.0 * SUM(COALESCE(so,0))/SUM(g), 2) AS avg_strikeouts_per_game,
+			   ROUND(1.0 * SUM(hr)/SUM(g), 2) AS avg_homeruns_per_game
     FROM teams
-	GROUP BY soa, hr, yearid
+	GROUP BY decade
 	ORDER BY decade;
-	--Answer:
+	
+--Average strikeouts by pitchers (soa) and homeruns allowed (hra) per game for each decade
+	SELECT 
+		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
+		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
+		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
+		       WHEN yearid BETWEEN 1950 AND 1959 THEN '1950s'
+		       WHEN yearid BETWEEN 1960 AND 1969 THEN '1960s'
+		       WHEN yearid BETWEEN 1970 AND 1979 THEN '1970s'
+		       WHEN yearid BETWEEN 1980 AND 1989 THEN '1980s'
+		       WHEN yearid BETWEEN 1990 AND 1999 THEN '1990s'
+		       WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
+		       WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
+		       END AS decade,
+			   ROUND(1.0 * SUM(soa)/SUM(g), 2) AS avg_strikeouts_per_game,
+			   ROUND(1.0 * SUM(hra)/SUM(g), 2) AS avg_homeruns_per_game
+    FROM teams
+	GROUP BY decade
+	ORDER BY decade;
+
+--Average strikeouts by batters (so) and pitchers (soa) combined for each game and decade and
+--average homeruns by batters (hr) and homeruns allowed (hra) for each game and decade
+	SELECT 
+		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
+		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
+		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
+		       WHEN yearid BETWEEN 1950 AND 1959 THEN '1950s'
+		       WHEN yearid BETWEEN 1960 AND 1969 THEN '1960s'
+		       WHEN yearid BETWEEN 1970 AND 1979 THEN '1970s'
+		       WHEN yearid BETWEEN 1980 AND 1989 THEN '1980s'
+		       WHEN yearid BETWEEN 1990 AND 1999 THEN '1990s'
+		       WHEN yearid BETWEEN 2000 AND 2009 THEN '2000s'
+		       WHEN yearid BETWEEN 2010 AND 2016 THEN '2010s'
+		       END AS decade,
+			   ROUND(1.0 * SUM(COALESCE(so,0)+ soa)/SUM(g), 2) AS avg_strikeouts_per_game,
+			   ROUND(1.0 * SUM(hr + hra)/SUM(g), 2) AS avg_homeruns_per_game
+    FROM teams
+	GROUP BY decade
+	ORDER BY decade;
+	--Answer: Both strike outs and homeruns appear to have a generally upward trend from decade-to-decade. This could be based
+	--on a number of factors such as advancements in technology offering more sophisticated workouts and workout machinery, better knowledge over time       --about what would increase pitching and homerun performance, and sadly, also performance enhancing drugs. 
+	
  
 --Number 6
 	SELECT p.namefirst, p.namelast, b.sb AS stolen_bases, b.cs AS caught_stealing, b.sb + b.cs AS stealing_attempts,
@@ -94,7 +136,7 @@
 	FROM 
 		(SELECT yearid, w, MAX(w) AS most_wins, wswin
 			FROM teams 
-			WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL 
+			WHERE yearid BETWEEN 1970 AND 2016 AND yearid <> 1981 AND wswin IS NOT NULL 
 			GROUP BY yearid, w, wswin
 			ORDER BY yearid) AS subquery;
 
@@ -175,12 +217,6 @@
 	WHERE yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
 	ORDER BY hr DESC;
 
-	SELECT p.namefirst, p.namelast, b.yearid, b.hr, CAST(p.finalgame AS date) - CAST(p.debut AS date) AS league_days
-	FROM batting AS b
-	LEFT JOIN people AS p
-	ON b.playerid = p.playerid
-	WHERE yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
-	ORDER BY hr DESC;
 
 
 SELECT * FROM batting;
