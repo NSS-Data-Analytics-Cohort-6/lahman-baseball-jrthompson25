@@ -17,7 +17,7 @@
 --Answer: Eddie Gaedel at 43 inches. He played in 1 game and his team is SLA.
 
 --Number 3 
-	SELECT p.namefirst, p.namelast, sc.schoolname, SUM(s.salary) AS total_salary
+	SELECT p.namefirst, p.namelast, sc.schoolname, SUM(DISTINCT s.salary) AS total_salary
 	FROM people AS p
 	LEFT JOIN salaries AS s
 	ON p.playerid = s.playerid
@@ -28,7 +28,7 @@
 	WHERE sc.schoolname = 'Vanderbilt University' AND salary IS NOT NULL
 	GROUP BY p.namefirst, p.namelast, sc.schoolname
 	ORDER BY SUM(s.salary) DESC;
---Answer: David Price came in first at $245,553,888
+--Answer: David Price came in first at $81,851,296
 
 --Number 4
 	SELECT SUM(po),
@@ -41,8 +41,10 @@
 	GROUP BY position;
 --Answer: Battery: 41,424 | Infield: 58,934 | Outfield: 29,560
 
---Number 5 
-	SELECT ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
+--Number 5-----REVISIT 
+	SELECT 
+		   ROUND(AVG(soa)/SUM(g), 2)AS avg_strikeout, 
+		   ROUND(AVG(hr)/SUM(g), 2) AS avg_homeruns,
 		  CASE WHEN yearid BETWEEN 1920 AND 1929 THEN '1920s'
 		       WHEN yearid BETWEEN 1930 AND 1939 THEN '1930s'
 		       WHEN yearid BETWEEN 1940 AND 1949 THEN '1940s'
@@ -69,40 +71,18 @@
 	ORDER by success_stealing_perc DESC;
 --Answer: Chris Owings at 91%
 
-   
 --Number 7
 --Largest number of wins for a team that did not win the world series
-	SELECT MAX(w) AS max_wins_by_series_loser
+	SELECT DISTINCT name, yearid, w, wswin
 	FROM teams 
-	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'N';
+	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'N'
+	ORDER BY w DESC;
 
 --Smallest number of wins for a team that did win the world series (Query 1)
-	SELECT MIN(w) AS min_wins_by_series_winner
+	SELECT DISTINCT name, yearid, w, wswin
 	FROM teams 
-	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'Y';
-
---(Query 2)
-	SELECT MIN(w) AS min_wins_by_series_winner
-	FROM teams 
-	WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL AND wswin = 'Y';
-
---(Query 3)
-	SELECT yearid, w, wswin
-	FROM teams 
-	WHERE yearid BETWEEN 1970 AND 2016  AND wswin IS NULL;
-
---(Query 4)
-	SELECT MIN(subquery.w)
-	FROM 
-		(SELECT yearid, w, wswin
-		FROM teams 
-		WHERE yearid BETWEEN 1970 AND 2016 AND wswin IS NOT NULL AND wswin = 'Y'
-		ORDER BY w) AS subquery;
-
---(Query 5)
-	SELECT yearid, w, wswin
-	FROM teams
-	WHERE yearid BETWEEN 1970 AND 2016 AND wswin = 'Y'
+	WHERE yearid BETWEEN 1970 AND 2016 AND yearid <> 1981 AND wswin = 'Y'
+	GROUP BY name, yearid, w, wswin
 	ORDER BY w;
 
 --Percentage of time a team with the most season wins also won the world series 
@@ -131,8 +111,8 @@
 		 ORDER BY yearid) AS subquery
 	GROUP BY subquery.yearid
 	ORDER BY subquery.yearid;	   
-	/*Answer: Largest number of wins for a team that did not win the world series - 116 
-	          Smallest number of wins for a team that did win the world series - 63
+	/*Answer: Largest number of wins for a team that did not win the world series - Seatle Mariners with 116   
+	          Smallest number of wins for a team that did win the world series - St. Louis Cardinals with 83
 			  Percentage of time a team had the most season wins also won the world series (overall) - 4.83%
 			  Percentage of time a team had the most season wins also won the world series (By year) - Refer to query above*/
 			  
@@ -143,17 +123,27 @@
 	GROUP BY team, park, games, attendance
 	ORDER BY avg_attendance DESC
 	LIMIT 5;
---Answer: LAN	LOS03	45719
+--Answer (Top 5): LAN	LOS03	45719
 ----------SLN	STL10	42524
 ----------TOR	TOR02	41877
 ----------SFN	SFO03	41546
 ----------CHN	CHI11	39906
-
+	SELECT team, park, (attendance/games) AS avg_attendance
+	FROM homegames
+	WHERE year = 2016 AND games >= 10
+	GROUP BY team, park, games, attendance
+	ORDER BY avg_attendance
+	LIMIT 5;
+--Answer (Bottom 5):  TBA	STP01	15878
+-----------OAK	OAK01	18784
+-----------CLE	CLE08	19650
+---------- MIA	MIA02	21405
+---------- CHA	CHI12	21559
 
 --Number 9
 	SELECT winners.manager_name, winners.team_name
 	FROM 
-		(SELECT CONCAT(p.namefirst, ' ', p.namelast) as manager_name, am.awardid, am.lgid, t.name AS team_name
+		(SELECT CONCAT( p.namefirst, ' ', p.namelast) as manager_name, am.awardid, am.lgid, t.name AS team_name
 		 FROM awardsmanagers AS am
 		 INNER JOIN people AS p
 		 ON am.playerid = p.playerid
@@ -196,12 +186,4 @@
 SELECT * FROM batting;
 SELECT * FROM appearances;
 SELECT * FROM people;
-
-
-
-
-
-
-
-  
-
+;
