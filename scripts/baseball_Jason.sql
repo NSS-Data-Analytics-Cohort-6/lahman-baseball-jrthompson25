@@ -153,7 +153,7 @@
 		 ORDER BY yearid) AS subquery
 	GROUP BY subquery.yearid
 	ORDER BY subquery.yearid;	   
-	/*Answer: Largest number of wins for a team that did not win the world series - Seatle Mariners with 116   
+	/*Answer: Largest number of wins for a team that did not win the world series - Seattle Mariners with 116   
 	          Smallest number of wins for a team that did win the world series - St. Louis Cardinals with 83
 			  Percentage of time a team had the most season wins also won the world series (By year) - Refer to query above*/
 			  
@@ -165,10 +165,10 @@
 	ORDER BY avg_attendance DESC
 	LIMIT 5;
 --Answer (Top 5): LAN	LOS03	45719
-----------SLN	STL10	42524
-----------TOR	TOR02	41877
-----------SFN	SFO03	41546
-----------CHN	CHI11	39906
+------------------SLN	STL10	42524
+------------------TOR	TOR02	41877
+------------------SFN	SFO03	41546
+------------------CHN	CHI11	39906
 	SELECT team, park, (attendance/games) AS avg_attendance
 	FROM homegames
 	WHERE year = 2016 AND games >= 10
@@ -176,10 +176,10 @@
 	ORDER BY avg_attendance
 	LIMIT 5;
 --Answer (Bottom 5):  TBA	STP01	15878
------------OAK	OAK01	18784
------------CLE	CLE08	19650
----------- MIA	MIA02	21405
----------- CHA	CHI12	21559
+----------------------OAK	OAK01	18784
+----------------------CLE	CLE08	19650
+---------- -----------MIA	MIA02	21405
+---------- -----------CHA	CHI12	21559
 
 --Number 9
 	SELECT winners.manager_name, winners.team_name
@@ -208,17 +208,79 @@
 	HAVING COUNT(name) > 1;
 
 
---Number 10 *******************
+--Number 10 -- Getting Error -- ERROR:  more than one row returned by a subquery used as an expression SQL state: 21000 - Does this mean this needs to be a         --correlated subquery.....in other words, run as a loop?
+--Attempt to generate table of max 2016 homeruns that are greater in number than max homeruns from players from every year in batting table
+	SELECT p.namefirst, p.namelast, b.yearid, MAX(b.hr) AS max_homeruns
+	FROM batting AS b
+	LEFT JOIN people AS p
+	ON b.playerid = p.playerid
+	WHERE b.yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
+	GROUP BY p.namefirst, p.namelast, b.yearid, p.finalgame, p.debut, b.hr
+	HAVING MAX(b.hr) > (SELECT MAX(hr) AS max_homeruns
+						FROM batting
+						WHERE hr >= 1
+						GROUP BY hr
+						ORDER BY hr DESC)
+	ORDER BY hr DESC;
+	
+--Test Queries
+	(SELECT MAX(b.hr) AS max_homeruns
+	FROM batting AS b
+	LEFT JOIN people AS p
+	ON b.playerid = p.playerid
+	WHERE b.yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
+	FROM batting AS b
+	LEFT JOIN people AS p
+	ON b.playerid = p.playerid
+	WHERE CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
+	GROUP BY p.namefirst, p.namelast, b.yearid, p.finalgame, p.debut, league_days, b.hr
+	HAVING MAX(b.hr) <
+	ORDER BY b.hr DESC;
+	
+	
+--Maximum homeruns from regular and post season combined (Test)
+	SELECT b.playerid, b.yearid, MAX(b.hr) + MAX(bp.hr) AS max_hr
+	FROM batting AS b
+	LEFT JOIN battingpost AS bp
+	ON b.yearid = bp.yearid,
+	WHERE b.hr IS NOT NULL AND bp.hr IS NOT NULL AND b.hr >= 1
+	GROUP BY b.playerid, b.yearid, sub_max_2016.max_hr
+	ORDER BY max_hr DESC;
+	
+	
+--Test
+	SELECT b.playerid, b.yearid, MAX(b.hr) + MAX(bp.hr) AS max_hr
+		FROM batting AS b
+		LEFT JOIN battingpost AS bp
+		ON b.yearid = bp.yearid
+		WHERE b.hr IS NOT NULL AND bp.hr IS NOT NULL AND b.hr >= 1 AND b.yearid = 2016 
+		GROUP BY b.playerid, b.yearid
+		ORDER BY max_hr DESC 
+	
+	
+	--Meant to be subquery for max homeruns in 2016
+	SELECT b.playerid, b.yearid, MAX(b.hr) + MAX(bp.hr)AS max_hr
+	FROM batting AS b
+	LEFT JOIN battingpost AS bp
+	ON b.yearid = bp.yearid
+	WHERE b.hr IS NOT NULL AND bp.hr IS NOT NULL AND b.hr >= 1 AND b.yearid = 2016 
+	GROUP BY b.playerid, b.yearid
+	ORDER BY max_hr DESC;
 	SELECT p.namefirst, p.namelast, b.yearid, b.hr, CAST(p.finalgame AS date) - CAST(p.debut AS date) AS league_days
 	FROM batting AS b
 	LEFT JOIN people AS p
 	ON b.playerid = p.playerid
 	WHERE yearid = 2016 AND CAST(p.finalgame AS date) - CAST(p.debut AS date) >= 3650 AND b.hr >= 1
 	ORDER BY hr DESC;
+	
+--Queries used for browsing tables 
+	SELECT * FROM appearances;
+	SELECT * FROM people;
+
+--Tables with mention of HRs
+	SELECT * FROM batting;
+	SELECT * FROM battingpost;
+	SELECT * FROM teams;
 
 
 
-SELECT * FROM batting;
-SELECT * FROM appearances;
-SELECT * FROM people;
-;
